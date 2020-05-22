@@ -1,0 +1,296 @@
+7. SELECT
+      (1) 기본문법
+      (2) 확장문법
+------ 20.05.22 -------------------------------------------------------      
+      (3) 함수 (Single-row function, aggregation function,........................)
+           1) single-row function(단일형 함수) : String, Numeric, Data & Time
+                        - String Function
+                               -> ASCII(),CHAR()
+                               =======================
+                                SELECT ASCII('a'), char(98);         # 'a'를 아스키코드로 98을 문자로 바꿔주는 함수.
+                               
+
+                               -> LENGTH()
+                             =============================
+                                SELECT ename,LENGTH(ename) FROM emp;       
+
+
+                               -> INSTR()
+                               ===================
+                                   SELECT INSTR('foobarbar','bar');      #'foobarbar'에서 'bar'는 몇번째 위치에 있는지 알려주는 함수
+                                   SELECT INSTR('foobarbar','love');
+ 
+
+                               -> LEFT(),RIGHT(),SUBSTR(),SUBSTRING()
+                               ================================
+                                  SELECT LEFT('abcdefg',3),RIGHT('abcdefg',4);
+                                  SELECT SUBSTRING('i love sql',3);
+                                  SELECT SUBSTRING('i love sql',3,4);
+                                  SELECT SUBSTRING('i love sql',-3);
+      
+
+                               -> LOWER(),UPPER()
+                           =========================
+                                 SELECT LOWER('ABcdEF'),UPPER('ABcdEF');
+
+
+                               -> LTRIM(),RTRIM(),TRIM()
+                              ============================
+                                  SELECT '              abc                 ';
+                                  SELECT LTRIM('              abc                 ') AS a;
+                                  SELECT TRIM('              abc                 ') AS a;
+                    
+
+                    - Numeric Function
+                                -> CEIL(),FLOOR(),ROUND(),TRUNCATE()                  # 소수점자리 처리하는 함수
+                              =================================
+                                  SELECT CEIL(1.23),FLOOR(5.78);
+                                  SELECT ROUND(1.23,0),ROUND(3.89,1);
+                                  SELECT TRUNCATE(1.78,0),TRUNCATE(5.436,1),TRUNCATE(76.4252,-1);
+
+
+                                -> MOD()                # 나머지 구하는 함수
+                                ==============
+                                  SELECT MOD(29,9);
+
+
+                                -> RAND()               #0부터 1사이의 난수
+                                ==============
+                                  SELECT RAND();    
+
+
+                     - Date Function
+                                -> NOW(),SYSDATE(),CURDATE(),CURTIME()      # 현재,오늘 날짜를 알려주는 함수
+                          =====================================
+                                  SELECT NOW();
+                                  SELECT SYSDATE();
+                                        
+
+                                 -> YEAR(),MONTH(),DAYOFMONTH()
+                           ==========================================
+                                  SELECT YEAR(NOW()),MONTH(NOW());
+                                  SELECT DAYOFMONTH(NOW()),DAYOFMONTH('2019/04/23');
+                                        
+
+                                 -> DAYOFWEEK(),WEEKDAY()            # DAYOFWEEK: 일요일:1,월요일:2,화요일:3.........        #WEEKDAY: 월요일:0, 화요일:1. 수요일:2.............
+                                 ==========================
+                                   SELECT DAYOFWEEK(NOW()),WEEKDAY(NOW());
+
+
+                                 -> DAYOFYEAR()
+                                 ==============
+                                   SELECT DAYOFYEAR(NOW());
+                                   SELECT DAYOFYEAR('2020.05.05');          
+
+
+                                 -> DATE_ADD(),DATE_SUB(),ADDDATE()
+                                ===============================
+                                   SELECT DATE_ADD(NOW(),INTERVAL 5 YEAR);          # 오늘날짜를 기준으로 5년 후
+                                   SELECT DATE_ADD(NOW(),INTERVAL 100 DAY); 
+                                   SELECT DATEDIFF(NOW(),'2019/05/05');
+                                   SELECT LAST_DAY('2020/02/21');
+
+
+             2 )aggregation function : AVG(), SUM(), MIN(), MAX(), COUNT()
+                                        ============================
+                                         // 가장 최근에 입사한 직원의 이름,부서,업무,입사일자 조회
+                                         SELECT ename,deptno,job,hiredate FROM emp WHERE hiredate=max(hiredate);    
+
+                                         // 업무가 salesman인 직원들의 급여평균, 최고급여, 최저급여,합계급여
+                                          SELECT AVG(sal),MAX(sal),MIN(sal),SUM(sal) FROM emp WHERE job='salesman';
+ 
+                                         // 총 직원수 
+                                          SELECT COUNT(ename) FROM emp;
+                                          SELECT COUNT(*) FROM emp;                       * :가장 최대개수의 요쇼를 가진 필드값을 가져온다.
+                                          SELECT COUNT(comm) FROM emp;                 # NULL값을 제외하고 갯수를 센다. 
+  
+             3) 기타함수
+                       1> CONVERT()
+                                    SELECT CONVERT(150,CHAR),CONVERT('2020-05-05',DATE);
+                       
+
+                       2> CASE              # 끝날 때는 항상 END라고 마무리
+                                    // 업무가 salesman이면 '커미션 있음'이라고 출력하고 그외 업무는 '커미션없음'이라고 출력
+                                    SELECT ename,job,comm, 
+                                              CASE
+                                                       WHEN job = 'salesman' THEN '커미션 있음'
+                                                       ELSE '커미션 없음'
+                                              END as '커미션 여부'                                                    
+                                    FROM emp; 
+ 
+                      3> COALESCE()              # NULL 값을 처리하는 함수                   # COALESCE(comm,0)    -> comm값 중 NULL이 있으면 0으로 바꿔라.
+                                   // 현재 직원들의 총급여를 조회
+                                   SELECT ename,sal,comm,(sal+comm) as  '총급여' FROM emp;
+                                   SELECT ename,sal,comm,(sal+COALESCE(comm,0)) as  '총급여' FROM emp;                                   
+
+
+
+<연습문제>
+1. 오늘부터 12월 25일까지 몇일이 남았는가?
+SELECT DATEDIFF('2020/12/25',NOW());
+
+
+2. 현재까지 근무한 직원들의 근무일수를 몇주 몇일로 조회.(단, 근무일수가 많은 사람 순으로 조회)
+SELECT TIMESTAMPDIFF(WEEK,hiredate,NOW()) AS week                     X
+
+
+
+3. 10번 부서 직원들 중 현재까지의 근무월수를 계산해서 조회
+SELECT MONTH(hiredate) WHERE deptno=10;                               X
+
+
+
+4. 20번 부서 직원들 중 입사일자로부터 13개월이 지난 후의 날짜를 조회
+SELECT deptno,ename,DATE_ADD(hiredate,INTERVAL 13 MONTH) FROM emp WHERE deptno=20;
+
+
+5. 모든 직원에 대해 입사한 달의 근무일수를 조회
+SELECT                                                X
+
+
+6. 현재 급여에 15%가 증가된 급여를 계산하여 사번,이름, 급여, 증가된 급여를 조회(단, 급여는 반올림하여 적용한다.)
+SELECT ename,empno,sal,ROUND(sal*1.15) FROM emp;  
+
+
+7. 이름, 입사일, 입사일로부터 현재까지의 월수, 급여,급여 총계를 조회
+SELECT ename,hiredate FROM emp                                         X
+
+
+
+8. 업무가 analyst이면 급여를 10%증가시키고 clerk이면 15%, manager이면 20%증가 시켜서 이름, 업무, 급여, 증가된 급여를 조회
+SELECT ename,job,sal,
+CASE 
+WHEN job='analyst' THEN ROUND(sal*1.1)
+WHEN job='clerk' THEN ROUND(sal*1.15)
+WHEN job='manager' THEN ROUND(sal*1.2)                   
+END as 'newsal' FROM emp;
+
+
+
+9. 이름의 첫글자가 k보다 크고 y보다 작은 직원의 이름, 부서, 업무를 조회하시오.
+SELECT ename,deptno,job FROM emp WHERE                                       X
+
+
+
+
+
+
+
+
+
+
+
+8. DML : INSERT, UPDATE, DELETE
+            CREATE TABLE tbltest( 
+                         id         int            null,    
+                         name     varchar(10),
+                         regdate  datetime    
+            )[default charset=uft8;]
+
+           (1)INSERT
+                      	INSERT INTO 테이블명(필드명,............) VALUES(값,................)
+                        INSERT INTO 테이블명 VALUES(값,................)     # 필드명이 생략될 경우 모든 필드에 값을 넣겠다는 것이다.
+                      ==============================================
+                        INSERT INTO tbltest(id,name) VALUES(1,'JAMES');   
+                        INSERT INTO tbltest(id,name,regdate) VALUES(2,'Kim',NOW());     
+                        INSERT INTO tbltest VALUES(3,'Lee','2020-05-22 12:54:01');     
+                        
+               * 한글인코딩
+                        SHOW VARIABLES LIKE 'c%';
+                        SHOW VARIABLES LIKE 'datadir';
+                ------------------------------------------------------                        
+                   C:\ProgramData\MySQL\MySQL Server 5.7   my.ini 수정
+                     (노트패드로 my.ini을 열었다.)
+                     [client]
+                      default-character-set=utf8 
+                     [mysqldump]       #새로만들기
+                      default-character-set=utf8
+                     [mysqld]
+                      character-set-client-handshake = FALSE
+                      init_connect="SET collation_connection = utf8_general_ci"
+                      init_connect="SET NAMES utf8"
+                      character-set-server = utf8
+
+                     (CMD창에서) 
+                     ALTER DATABASE testdb DEFAULT CHARACTER SET utf8;   
+                      
+
+                      (mysql exit후)
+                     chcp 65001      # cmd창에서 한글보이게 함
+                     chcp 949         # cmd 원래대로
+
+
+
+
+           (2)UPDATE
+                   UPDATE 테이블명 
+                           SET 필드명= 값 [, 필드명=값,................]
+                           WHERE 조건문;
+                   --------------------------------------------------------------
+                    UPDATE tbltest
+                            SET regdate='2020/01/01',name='tom'
+                            WHERE id=1; 
+
+ 
+                * workbench에서 안전모드 해제
+                             Edit > Preference > SQL editor > SafeUpdates 체크표시 해제
+
+
+           (3) DELETE 
+                   DELETE FROM 테이블명;
+                   DELETE FROM 테이블명 WHERE 조건문;
+
+
+
+
+
+9. Sub Query
+(1) 다른 query 문에 포함된 query문을 의미한다. (중첩된 query문)
+(2) 반드시 ()를 사용해야한다. 
+(3) 연산자 오른쪽에서 사용해야한다.
+(4) ORDER BY 사용불가  
+(5) 연산자
+             1) 단일행 연산자
+             2) 다중행 연산자
+
+----------------------------------------------------------------------
+// scott의 급여보다 더 많이 받는 직원의 이름,업무,급여를 조회
+SELECT sal FROM emp WHERE ename='scott';     # 스캇의 급여확인
+SELECT ename,job,sal FROM emp WHERE sal>3000;
+   
+SELECT ename,job,sal FROM emp WHERE sal> (SELECT sal FROM emp WHERE ename='scott');   # 이런게 서브쿼리
+          # 서브쿼리로 값을 받은 후 실행                  # 서브쿼리가 가장 먼저실행
+
+
+//사번이 7521의 업무와 같고, 급여가 7934보다 많은 직원의 사번,이름,업무,급여를 조회
+                                                                                
+SELECT empno,ename,job,sal FROM emp WHERE job= (SELECT job FROM emp WHERE empno=7521); 
+SELECT empno,ename,job,sal FROM emp WHERE sal >(SELECT sal FROM emp WHERE empno=7934);
+
+위에 둘을 합친다.
+SELECT empno,ename,job,sal FROM emp WHERE sal >(SELECT sal FROM emp WHERE empno=7934) AND job=(SELECT job FROM emp WHERE empno=7521); 
+
+
+//가장 최근에 입사한 직원의 이름,부서,업무,입사일자 조회
+SELECT ename,deptno,job,hiredate FROM emp WHERE hiredate=(SELECT MAX(hiredate) FROM emp);
+
+
+
+
+//업무별로 최소급여를 받는 직원의 사번,이름,부서코드를 조회
+SELECT MIN(sal) FROM emp GROUP BY job;
+SELECT ename,empno,deptno FROM emp 
+          WHERE sal=(SELECT MIN(sal) FROM emp GROUP BY job);
+                 #1개              #5개   로 비교되므로 이렇게 할 수없다. 그래서 다중행연산자를 이용한다.
+
+SELECT ename,empno,deptno,sal FROM emp 
+          WHERE sal IN (SELECT MIN(sal) FROM emp GROUP BY job);
+
+
+
+
+ 
+
+
+SELECT distinct job FROM emp;                                                        #distinct 중복제거
+
