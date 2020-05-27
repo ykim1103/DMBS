@@ -1,0 +1,153 @@
+### 1번째 **실습 문제**
+
+1. 1981년에 입사한 사람의 이름, 업무, 입사일자 조회
+SELECT ename, job, hiredate FROM emp WHERE hiredate between '1981-01-01' AND '1981-12-31';
+
+    SELECT ename, job, hiredate FROM emp WHERE hiredate like '1981%';
+
+2. 사번이 7902, 7788, 7566인 사원의 이름, 업무, 급여,입사일자 조회
+SELECT ename, job, sal, hiredate FROM emp WHERE empno IN (7902,7788,7566);
+3. 업무가 manager, clerk, analyst가 아닌 직원의 이름, 업무, 급여, 부서번호 조회
+SELECT ename, job, sal, deptno FROM emp WHERE job !='manager' AND job !='clerk' AND job !='analyst';
+
+    SELECT ename, job, sal, deptno FROM emp WHERE job NOT IN ('manager', 'clerk', 'analyst');
+
+4. 업무가 president 또는 salesman이고 급여가 1500인 직원의 이름, 급여, 업무, 부서번호 조회
+SELECT ename, sal, job, deptno FROM emp WHERE job in ('president','salesman') and sal=1500;
+5. 가장 최근에 입사한 직원의 이름, 부서, 업무, 입사일자 조회(현재 검색 일자가 1987년이라 가정한다.)
+SELECT ename, deptno,job,hiredate FROM emp WHERE hiredate between '1987-01-01' and '1987-12-31' ORDER BY hiredate desc;
+
+    SELECT ename, deptno, job, hiredate FROM emp ORDER BY  hiredate DESC limit 1; ⇒ 정답입니다.
+
+    SELECT ename, deptno, job, hiredate FROM emp WHERE hiredate=(SELECT max(hiredate) FROM emp); ⇒ 정답입니다.
+
+6. 같은 부서내에서 같은 업무를 하는 직원의 급여가 많은 순으로 조회
+SELECT ename, deptno, job, sal FROM emp ORDER BY deptno, sal desc;
+7. 커미션이 급여보다 10%이상 많은 직원의 급여가 많은 순으로 조회
+SELECT ename, sal FROM emp WHERE comm>=sla*1.1 ORDER BY sal desc;
+8. 이름에 L자가 2개 있고 30번 부서이거나 직속상사가 7782인 직원의 이름, 부서, 직속상사 조회
+SELECT ename, deptno, mgr FROM emp WHERE mgr =7782 OR (ename LIKE '%l%l%' and deptno = 30);
+
+### 2번째 실습 문제
+
+1. 오늘부터 12월 25일까지 몇일이 남았는가?
+
+SELECT datediff('2020-12-25',now())
+
+2. 현재까지 근무한 직원들의 근무일수를 몇주 몇일로 조회.(단, 근무일수가 많은 사람 순으로 조회)
+
+SELECT ename, hiredate, truncate(DATEDIFF(NOW(),hiredate)/7,0) '근무일수(주)',DATEDIFF(NOW(),hiredate) '근무일수(일)'FROM emp;
+
+3. 10번 부서 직원들 중 현재까지의 근무월수를 계산해서 조회
+
+SELECT ename, deptno, timestampdiff(month,hiredate,NOW()) '근무 월수' FROM emp WHERE deptno = 10 ;
+
+4. 20번 부서 직원들 중 입사일자로부터 13개월이 지난 후의 날짜를 조회
+
+SELECT ename, deptno, DATE_ADD(hiredate, INTERVAL 13 month) FROM emp WHERE deptno = 20 ;
+
+5. 모든 직원에 대해 입사한 달의 근무일수를 조회
+
+SELECT ename, deptno, hiredate, DATEDIFF(LAST_DAY(hiredate),hiredate) '입사달의 근무일수' FROM emp ;
+
+6. 현재 급여에 15%가 증가된 급여를 계산하여 사번,이름, 급여, 증가된 급여를 조회(단, 급여는 반올림하여 적용한다.)
+
+SELECT empno, ename, sal, round(sal*1.15) '증가된 급여' FROM emp;
+
+7. 이름, 입사일, 입사일로부터 현재까지의 월수, 급여,급여 총계를 조회
+
+SELECT ename,hiredate, TIMESTAMPDIFF(MONTH,hiredate,NOW()) ,sal, TIMESTAMPDIFF(MONTH,hiredate,NOW())*sal FROM emp;
+
+8. 업무가 analyst이면 급여를 10%증가시키고 clerk이면 15%, manager이면 20%증가 시켜서 이름, 업무, 급여, 증가된 급여를 조회
+
+SELECT ename,job, sal, case when job='analyst' then round(sal*1.1) when job = 'clerk' then round(sal*1.15) when job ='manager'then round(sal*1.2) END FROM emp;
+
+9. 이름의 첫글자가 k보다 크고 y보다 작은 직원의 이름, 부서, 업무를 조회하시오.
+
+SELECT ename, deptno, job FROM emp WHERE LEFT(ename,1) > 'k' AND LEFT(ename,1)<'y';
+
+---
+
+### 3번째 실습문제(Sub Query)
+
+1. Blake와 같은 부서에 있는 모든 직원의 사번, 이름, 입사일자 조회
+
+SELECT empno, ename, hiredate FROM emp WHERE deptno = (SELECT deptno FROM emp WHERE ename = 'Blake');
+
+2. 평균 급여 이상을 받는 직원들의 사번, 이름을 조회. 단, 급여가 많은 순으로 정렬
+
+SELECT empno, ename FROM emp where sal>=(SELECT avg(sal) FROM emp) ORDER BY sal DESC;
+
+3. 이름에 T자가 들어가는 직원이 근무하는 부서에서 근무하는 직원의 사번,이름, 급여 조회
+
+SELECT empno,ename, sal FROM emp WHERE deptno in (select deptno from emp WHERE ename LIKE '%t%');
+
+4. 부서의 위치가 dallas인 모든 직원에 대해 사번, 이름, 급여, 업무조회
+
+SELECT empno, ename, sal FROM emp WHERE deptno IN(SELECT deptno FROM dept WHERE loc = 'dallas');
+
+5. King에게 보고하는 모든 직원의 이름과 부서, 업무, 급여를 조회
+
+SELECT ename, deptno,job, sal FROM emp WHERE mgr IN(SELECT empno FROM emp WHERE job = 'president');
+
+6. 급여가 30번 부서의 최저급여보다 높은 직원의 사번, 이름, 급여 조회
+
+SELECT empno, ename, sal FROM emp WHERE sal > ALL(SELECT min(sal) FROM emp WHERE deptno=30);
+
+7. 10번부서에서 30번 부서의 직원과 같은 업무를 하는 직원의 이름과 업무를 조회
+
+SELECT ename, job FROM emp WHERE deptno = 10 and job IN (SELECT job FROM emp WHERE deptno=30);
+
+---
+
+### Join예제
+
+1. 각 직원들에 대해 그들의 관리자(직속상사)보다 먼저 입사한 직원의 이름, 입사일, 관리자 이름, 관리자 입사일 조회
+
+SELECT A.ename, A.hiredate, A.mgr,B.hiredate FROM emp A, emp B WHERE A.mgr = B.EMPNO AND A.HIREDATE < B.HIREDATE;
+
+2. 말단 사원의 사번, 이름, 업무, 부서번호, 근무지를 조회
+
+SELECT distinct empno, ename, job, E.deptno, D.loc,hiredate FROM emp E, dept D WHERE E.deptno = D.DEPTNO AND
+(SELECT COUNT(empno) FROM emp WHERE E.empno IN (SELECT mgr FROM emp)) < 1 ORDER BY hiredate DESC LIMIT 1;
+
+---
+
+CREATE TABLE tblBook(
+
+author	varchar(20) not null,
+
+title	varchar(20));
+
+INSERT INTO tblBook VALUES('최주현', '하늘과 땅');
+
+INSERT INTO tblBook VALUES('최주현', '바다');
+
+INSERT INTO tblBook VALUES('유은정', '바다');
+
+INSERT INTO tblBook VALUES('박성우', '문');
+
+INSERT INTO tblBook VALUES('최주현', '문');
+
+INSERT INTO tblBook VALUES('박성우', '천국');
+
+INSERT INTO tblBook VALUES('최지은', '천국');
+
+INSERT INTO tblBook VALUES('최주현', '천국');
+
+INSERT INTO tblBook VALUES('박성우', '고슴도치');
+
+INSERT INTO tblBook VALUES('서금동', '나');
+
+3. 한 권의 책에 대해 두 명 이상의 작가가 쓴 책을 검색
+
+책이름	작가명	작가명
+
+SELECT B1.title, B1.author, B2.author FROM tblBook B1 JOIN tblBook B2 ON B1.title = B2.title and B1.author> B2.author;
+
+4. 한 권의 책에 대해 세명의 작가가 쓴 책을 검색
+
+책이름	작가명	작가명	작가명
+
+SELECT B1.title, B1.author, B2.author,B3.author FROM tblBook B1, tblBook B2, tblbook B3 WHERE B1.title = B2.title AND
+B2.title = B3.title AND B1.author < B2.author AND B2.author < B3.author;
