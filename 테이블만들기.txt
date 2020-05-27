@@ -1,0 +1,61 @@
+CREATE TABLE POST(
+post1 CHAR(3),
+post2 CHAR(3),
+addr VARCHAR(60) NOT NULL);
+
+alter table post add constraint pk_post1post2 primary key(post1,post2);
+
+
+
+CREATE TABLE MEMBER(
+id INT(4), 
+NAME VARCHAR(10) NOT null,
+Gender CHAR(1),
+Jumin1 CHAR(6),
+Jumin2 CHAR(7),
+Tel VARCHAR(15),
+post1 CHAR(3),
+post2 CHAR(3),
+addr VARCHAR(60)
+);
+
+
+ALTER TABLE member ADD CONSTRAINT pk_id PRIMARY KEY(id);
+ALTER TABLE member ADD CONSTRAINT fk_post12 FOREIGN KEY(post1,post2) REFERENCES post(post1,post2); 
+ALTER TABLE member ADD CONSTRAINT uk_post12 UNIQUE(Jumin1,Jumin2);
+
+------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE TABLE POST (
+	POST1 CHAR(3) ,
+	POST2 CHAR(3),
+	ADDR VARCHAR(60) NOT NULL,
+	CONSTRAINT pk_post PRIMARY KEY(POST1,POST2));
+	
+DESC post;
+
+DROP TABLE member;
+
+CREATE TABLE member(
+id int(4) PRIMARY KEY ,
+name VARCHAR(10) NOT NULL,
+SEX CHAR(1),
+JUMIN1 CHAR(6) ,
+JUMIN2 CHAR(7) ,
+TEL   VARCHAR(15),
+POST1 CHAR(3) ,
+POST2 CHAR(3),
+ADDR VARCHAR(60)
+);
+
+ALTER TABLE member ADD CONSTRAINT uk_jumin UNIQUE (JUMIN1, JUMIN2);
+ALTER TABLE member ADD CONSTRAINT fk_POST FOREIGN KEY (POST1, POST2) REFERENCES POST(POST1, POST2);
+
+
+
+
+
+
+
