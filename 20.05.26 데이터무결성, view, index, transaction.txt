@@ -1,0 +1,223 @@
+11. 데이터무결성
+          .
+          .
+     (2) 컬럼의 속성
+     (3) 실습
+         1) Primary Key
+             -NN속성 : Not Null. 원래 컬럼은 Null을 허용하지만 NN에서는 Null값을 거부한다.  
+             INSERT INTO tblexam(name) VALUES('James');     #id 값을 설정하지 않아서 오류남
+             
+             drop table tblexam;
+   
+             *테이블다시 생성(제약도 같이 생성)
+               create table tblExam(
+                              id         int,
+                           name      varchar(10),    
+                           CONSTRAINT pk_id PRIMARY KEY(id,name)
+                  );
+   
+              * 제약 삭제 
+               ALTER table tblexam DROP PRIMARY KEY;      #ALTER: 이미 만들어진 테이블에 추가,삭제 등 하는 것.
+               
+              * 필드수정
+               ALTER table tblexam MODIFY id int not null;   # NULL값 허용불가로 수정
+               DESC tblexam;
+     
+              * ALTER table tblexam MODIFY name varchar(20) null;   #varchar를 20글자, NULL 값 허용으로 수정
+                desc tblexam;
+
+              * ALTER table tblexam ADD age int not null;             # age라는 필드 추가
+                desc tblexam;
+           =====================================================
+          2) Unique
+                   desc tblexam;
+                   ALTER table tblexam ADD CONSTRAINT pk_id PRIMARY KEY(id);   # id엔 프라이머리키
+                   ALTER table tblexam ADD CONSTRAINT uk_name UNIQUE(name);  # name,age 에는 유니크
+                   ALTER table tblexam ADD CONSTRAINT uk_age UNIQUE(age);
+                   desc tblexam;
+
+                   --ND 속성
+                    INSERT INTO tblexam(id,name,age) VALUES(1,'Hong',22); 
+                    INSERT INTO tblexam(id,name,age) VALUES(2,'Hong',32);     #이름은 유니크로 되어있고 유니크로 되어 있으면 중복허용하지 않는다.   
+         
+        3) 예방차원에서 사용할 수 있는 테이블 자체 옵션
+                   -- NN속성 : default 
+                   -- ND속성 : auto_increment                  # auto_increment 번호 자동증가
+                   
+                  * default 
+                   drop table tblexam;           
+                    
+                     다시생성.
+                      create table tblExam(
+                              id         int,
+                           name      varchar(10)   default 'noname',  
+                           age          int           default 0 
+                       );
+                   INSERT INTO tblexam(id) VALUES(1);                       
+                   INSERT INTO tblexam(id,name) VALUES(1,'hong');
+                   
+                 * auto_increment
+                   drop table tblexam;
+                   다시생성.
+                   create table tblExam(
+                              id         int    auto_increment PRIMARY KEY,        # id는 자동증가
+                           name      varchar(10),  
+                           age          int       
+                       );        
+            
+                     INSERT INTO tblexam(name,age) VALUES('Hong',20);
+                     INSERT INTO tblexam(name,age) VALUES('Kim',24);
+                     INSERT INTO tblexam(name) VALUES('Lee');
+
+             4) FOREIGN KEY
+                     create table tbldept(
+                               deptno     int,
+                               dname     varchar(10)
+                       );
+                    
+                    INSERT INTO tbldept VALUES(1000,'Sales');
+                    INSERT INTO tbldept VALUES(1001,'Research');
+
+
+
+                    create table tblemp(
+                             empno      int,
+                             ename      varchar(10),
+                             hiredate       datetime,
+                             deptno          int                     
+                       );
+                      
+                    ALTER table tbldept ADD CONSTRAINT pk_deptno PRIMARY KEY(deptno);    #참조당할 필드에 기본키 작성                    
+                        
+                    ALTER table tbldept ADD CONSTRAINT fk_deptno FOREIGN KEY(deptno)       #사용불가. 에러남     
+                              REFERENCES tbldept(deptno);
+
+                    INSERT INTO tblemp(empno,ename,hiredate,deptno)
+                    VALUES(1,'Hong',now(),1002);       
+                       
+
+                    INSERT INTO tblemp(empno,ename,hiredate,deptno)
+                    VALUES(1,'Hong',now(),1001);       
+                       
+
+      
+                  --NC속성
+                  UPDATE tbldept SET deptno= 10001 WHERE deptno =1001; 
+                  UPDATE tbldept SET deptno= 10000 WHERE deptno =1000;
+ 
+
+
+
+
+
+
+12. VIEW(sql 활용 p.58) : 가상테이블
+       (1) 정의 : 실제 테이블을 여러 관점에서 투영한 가상 테이블
+       (2) 문법: CREATE VIEW 뷰이름
+                  AS SELECT문
+       ---------------------------------------------------------
+       CREATE VIEW vw_emp1        
+        AS 
+        SELECT empno,ename,sal,comm,dname FROM emp JOIN dept ON emp.deptno=dept.deptno
+            WHERE sal >= 1500;
+       
+       SELECT * FROM vw_emp1;
+      
+       --DD
+       SELECT * FROM information_schema.views;     -> cmd에서 하지말고 하이디나 워크벤치에서 해보자!
+
+       (3) 주의할 점: DML 작업     
+           
+
+
+
+
+
+13. 인덱스(Index) (sql활용 p.48)
+       (1)문법
+                  1) CREATE INDEX 인덱스명 ON 테이블명(필드명,..............)
+                  2) 제약을 통해 자동생성
+            ----------------------------------------------------------------
+             CREATE TABLE tblindex(
+                  id        int,
+                 name    varchar(10),
+                 point     float
+                  );
+    
+             INSERT INTO tblindex VALUES(5, 'scott',9.8);
+             INSERT INTO tblindex VALUES(2, 'adam',4.2);
+             INSERT INTO tblindex VALUES(7, 'john',6.7);
+             INSERT INTO tblindex VALUES(1, 'tom',5);
+
+             SELECT * FROM tblindex WHERE point >= 4;
+             EXPLAIN SELECT * FROM tblindex WHERE point >=4;          
+
+
+             # 포인트에 인덱스 걸고 나서 다시 확인
+            CREATE INDEX idx_point ON tblindex(point);
+            EXPLAIN SELECT * FROM tblindex WHERE point >=4;
+            EXPLAIN SELECT * FROM tblindex WHERE id=2;
+         
+
+            #아이디에 기본키 달기
+            ALTER table tblindex ADD CONSTRAINT pk_id PRIMARY KEY(id);    
+            EXPLAIN SELECT * FROM tblindex WHERE id=2;          -> possible_keys에 PRIMARY라고 생김.
+
+
+
+
+
+
+14. Transaction(sql p.26)
+           - 작업의 단위 
+           - ALL or Nothing   : 일을 다하거나 아예 안하거나. 어중간하게 끝내지 말것!
+           - show variables like 'datadir';
+           - 트랜잭션 제어 명령어
+                      - rollback  :  다시 처음했던 작업으로 되돌려 놓기!
+                      - commit  :  
+                      
+                      SELECT @@autocommit;           #값이 1
+                      SET @@autocommit=false;
+                      SELECT @@autocommit;           # 값:0
+  
+
+                      - rollback
+                            delete from tblindex;
+                            select * from tblindex;
+                            rollback;
+                            select * from thblindex;
+                      
+
+                      - 트랜잭션 특성
+                              Atomicity: All or Nothing
+                              Consistency: 무결성
+                              Isolation: 독립성
+                              Durability: 장애 대응성
+
+                       - 동기화(Synchronize)처리: 동시접근x, 한번에 하나씩 처리 하는 것-> 데이터를 안전하게 처리 할 수 있다.
+                                                         데이터가 안전하게 처리되지만 속도가 느리다는 단점이 있다. 
+                                                                                                                     
+               
+           
+15. 프로시저,트리거
+           
+
+16. DB 설계(모델링)
+    1) 개념적설계
+    2) 논리적설계
+    3) 물리적설계            -> 어떤 데이터베이스(오라클을 사용할지, mysql을 사용할지) 사용할지 고민하는 단계
+    4) 개발,구현, 프로그래밍코딩
+    5) 테스트
+    6) 배포
+    7) 유지보수
+   이런 과정을 거치는 것을 waterfall방식이라고 한다.                     
+   
+    일대일 관계
+    일대다관계
+    다대다관계
+                         설계시  일대다관계가 되어야 가장 좋다. 
+
+   
+
+  
+ 
