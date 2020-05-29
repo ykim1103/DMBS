@@ -1,0 +1,190 @@
+1.  MongoDB
+(1)서버실행
+    1) mongod.exe : C:\data\db 폴더준비
+    2) 원하는 위치에 db생성
+         -임의의 폴더준비 : c\mongowork\server1
+         - mongod --dbpath "c\mongowork\server1"  -> cmd창에 입력하면된다. 
+
+(2)클라이언트 실행
+       mongo.exe
+(3)기본명령어
+    1) show dbs
+    2) use db명
+             - DB와 연결
+             - DB 생성
+    3) show collections
+    4) db : 현재 사용중인 db를 조회
+    5) db.dropDatabase() : DB 삭제 (삭제할 db로 이동)
+
+(4)Collection 생성,삭제
+            db.createCollection('이름'[,옵션])
+          ---------------------------------------------
+                         - capped : boolean 
+                                       이 값을 true 로 설정하면 capped collection을 활성화시킨다. 
+                                       capped collection 이란 고정된 크기를 가진 컬렉션으로 size가 초과되면
+                                       가장 오래된 데이터를 덮어쓴다.
+                                       이 값을 true로 설정하면 반드시 size 옵션도 설정해야한다. 
+   
+                         - size : number(바이트단위)
+                                    capped collection 을 위해 해당 컬렉션의 최대 크기를 byte로 지정
+                        
+                         - max : number(도큐먼트의 갯수)
+                                     해당 컬렉션에 추가 될 수 있는 최대갯수
+                                      
+            db.컬렉션명.drop() 
+
+
+
+(5)실습
+    use testdb   # testdb가 없어도 바로 use testdb하면 testdb를 자기가 알아서 만든 후 이용할 수 있다. 
+    db.createCollection('books') 
+    show dbs 
+    
+    db.books.insert({"name":"book1"})  
+    db.books.find()     # 몽고디비의 find 는 mysql 의 select 와 같다.
+    db.books.insert({"name":"book2","author":"홍길동"})
+    db.books.find()
+
+
+    db.books.insert([{"name":"books1"},{"name2":"book2","author":"홍길동"},
+                     {"name3":"book3","author":"유비","price":10000},
+                     {"name4":"book4","author":"관우","price":20000},
+                     {"name5":"book5","author":"장비","price":30000}])
+
+   ------------------------------------------------------------------------------
+ 20.05.29.금
+  db
+  use testdb
+  db.createCollection('books',{capped:true, size:1000000, max:5000})                    # capped를 하면 삭제가 불가하다.
+                                                                                                           그래서 콜렉션을 삭제하고 capped가 없는 버전으로 다시 만들고 하기!
+   db.books.find()
+   db.books.insert({'name':'book6','author':'임꺽정','seller':['교보','영풍']})
+
+  
+
+    //삭제
+    db.books.remove()    # 전체 데이터삭제
+    db.books.deleteOne({"name":"books1"})      # deleteOne은 한개만 삭제
+    db.books.deleteMany({"name":"book2"})     # 여러개 삭제
+    db.books.remove({"name":"book3"})
+    db.books.remove({"_id" : ObjectId("5ed0740d68caeaa085da381f")})
+    
+  
+=========================================================================
+
+  //조회                     # articles라는 컬렉션은 없지만 지금 insert을 하기 위해서 자기가 알아서 자동으로 만들어진다. 
+   db.articles.insert(            
+                [ {'title':'article01','content':'content01','writer':'velopert','likes':0,'comments':[]},
+                 {'title':'article02','content':'content02','writer':'alpha','likes':23,'comments':[{"name":"Park","message":"hey man!"}]},
+                 {'title':'article03','content':'content03','writer':'bravo','likes':40,'comments':[{"name":"Kim","message":"hey man!"},{"name":"bravo","message":"hey man!"}]}]
+                          )  
+    - wrtiter 값이 'velopert'인 document조회  
+                   db.articles.find({'writer':'velopert'})
+                   db.articles.find({'writer':'velopert'}).pretty()
+
+    - likes값이 30이하인 document조회
+                   db.articles.find({"likes":{$lte:30}}).pretty()
+
+    - likes값이 10보다 크고 30보다 작은 document조회 
+                  db.articles.find({"likes": {$gt:10,$lt:30}}).pretty() 
+                  db.articles.find({$and:[{"likes":{$gt:10}},{"likes":{$lt:30}}]}).pretty()
+                  db.articles.find({"likes":{$gt:10,$lt:30}}).pretty()
+
+    - writer 값이 'alpha' 또는 'bravo'인 document조회
+                  db.articles.find({$or : [{"writer":"alpha"},{"writer":"bravo"}]}).pretty()    
+                  db.articles.find({'writer':{$in : ["alpha","bravo"] } }).pretty()
+
+    - writer 값이 'bravo'이거나 likes값이 10미만인 document조회
+                  db.articles.find({ $or :[{"writer":"bravo"},{"like": {$lt:10}}]}).pretty()
+
+
+    - javascript 문법
+                 comment가 비어잇는 document조회
+                 : db.articles.find( {$where : "this.comments.length==0" } ).pretty()
+   
+    - $elemMatch : 각 요소와 매치되는 것을 찾겠다
+                 comment중에서 'KIM'이 작성한 댓글이 있는 document조회
+                 : db.articles.find( {"comments" : {$elemMatch : {"name":"Kim"} } } ).pretty()       # 대소문자 구분 해야함!
+
+    - sort(),limit(),skip()
+               db.order.insert([
+                      {"_id":1, "item":{"category":"cake", "type":"chiffon"}, "amount":10},
+                      {"_id":2, "item":{"category":"cookies", "type":"chocolate chip"}, "amount":50},
+                      {"_id":3, "item":{"category":"cookies", "type":"chocolate chip"}, "amount":15},
+                      {"_id":4, "item":{"category":"cake", "type":"lemon"}, "amount":30},
+                      {"_id":5, "item":{"category":"cake", "type":"carrot"}, "amount":20},
+                      {"_id":6, "item":{"category":"brownies", "type":"blondie"}, "amount":10}
+                    ])
+   
+              // id를 이용해서 정렬
+                      db.order.find().sort( {"_id":1 } )                # id를 기준으로 정렬 . 오름차순(1)
+                      db.order.find().sort( {"_id":-1 } )               내림차순(-1)
+              // amount로 오름차순 정렬하고, 그 결과 내에서 다시 id값으로 내림차순 정렬
+                      db.order.find().sort( {"amount":1,"_id":-1})
+              // 출력할 데이터 갯수를 제한하고자 할 때 
+                       db.order.find().limit(3)   
+              // 데이터를 원하는 갯수만큼 생략하고 출력
+                       db.order.find().skip(2)
+               
+              // 응용: 게시판의 페이징만들기                  #.sort({"_id":-1}) 없으면 오름차순               
+                       var showPage = function(page){
+                                   return db.order.find().sort( {"_id":-1}).skip((page-1)*2)                               
+                        }                          
+                            showPage(1)
+                            showPage(2)
+                            showPage(3)
+                         
+
+                         var showPage = function(page){
+                                   return db.order.find().sort( {"_id":-1})}
+ 
+                             showPage(1)
+                             showPage(2)
+                             showPage(3)
+                         
+
+                // 수정
+                          db.people.insert([
+                                  {name:"Abet", age:19},
+                                  {name:"Betty", age:20},
+                                  {name:"Charlie", age:23, skills:["mongodb", "nodejs"]},
+                                  {name:"David", age:23, score:20}
+                            ])
+                       * Abet의 나이를 20살로 변경
+                              db.people.update( {name:"Abet"}, {$set : {age:20} } )
+                              db.people.update( {name:"Abet"}, {age:19})       # age가 다시 19살로 바뀌는 것이 아니라 이름이 사라지고 age로 대체된다.
+                              db.people.update( {_id: ObjectId("5ed0a277d0595d627e10b49d")},{name:"Abet",age=20})  
+                
+                 // 특정 필드 삭제 : $unset   - David의 score 라는 field삭제
+                              db.people.update( {name:"David"}, {$unset: {score:1}} )
+                                                                       
+                 // 특정 필드 추가
+                              db.people.update( {name:"David"}, {$set:{score:20}})                         
+  
+                 // 존재하지 않는 document를 자동으로 입력: $upsert         # Elly가 없기 때문에 자동으로 생성하고 수정한다.                      
+                              db.people.update( {name:"Elly"},{"name":"Elly","age":17},{upsert:true})
+
+                // 여러 document의 특정 field를 수정
+                       * age가 20보다 작거나 같은 document의 score를 10으로 변경
+                              db.people.update( {"age":{$lte:20}},{$set{score:10}})
+                       * 다시 원래대로 Abet의 score 삭제
+                               db.people.update( {age:19},{$unset:{score:1}}  )
+                               db.people.update( {"age":{$lte:20}}, {$set:{score:10}},{multi:true})
+
+                 // 배열에 값을 추가: $push
+                        * Charlie의 skills배열에 'python'추기
+                                db.people.update( {name:"Charlie"},{$push:{"skills":"python" }}  )
+                                db.people.update( {name:"Charlie"},{$push:{"skills": ["C","C++"]}}  )
+                                db.people.update( {name:"Charlie"},{$push:{"skills": { $each : ["R","JAVA"]}}}  )
+                 // 배열에 값을 삭제: $pull
+                                db.people.update( {name:"Charlie"},{$pull:{"skills":"nodejs" }}  )
+                                db.people.update( {name:"Charlie"},{$pull:{"skills": ["C","C++"]}}  )
+                                db.people.update( {name:"Charlie"},{$pull:{"skills": { $in : ["R","JAVA"]}}}  )         # 삭제할 때는 each가 아니라 in으로 한다. 
+
+
+
+
+
+
+
+
